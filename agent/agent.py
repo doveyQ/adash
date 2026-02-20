@@ -1,0 +1,77 @@
+import os
+import time
+import psutil
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+class AgentEnv:
+    def __init__(self):
+        self.api_key = os.getenv("API_KEY")
+        self.api_url = os.getenv("API_URL")
+        self.last_check_time = 0
+        self.check_interval = 60
+
+    def get_cpu_usage(self):
+        return psutil.cpu_percent(interval=None)
+
+    def get_memory_usage(self):
+        return psutil.virtual_memory().percent
+
+    def get_disk_usage(self):
+        return psutil.disk_usage("/").percent
+
+    def get_network_usage(self):
+        net_io = psutil.net_io_counters()
+        return net_io.bytes_sent, net_io.bytes_recv
+
+    def get_battery_info(self):
+        battery = psutil.sensors_battery()
+        if battery:
+            return {"percent": battery.percent, "is_charging": battery.power_plugged}
+        return {"percent": None, "is_charging": None}
+
+    def get_system_info(self):
+        return {
+            "cpu_usage": self.get_cpu_usage(),
+            "memory_usage": self.get_memory_usage(),
+            "disk_usage": self.get_disk_usage(),
+            "network_usage": self.get_network_usage(),
+            "battery_info": self.get_battery_info(),
+        }
+
+    def send_to_api(self, data):
+        if not self.api_key or not self.api_url:
+            print("⚠️ API key or URL not found")
+            return
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        try:
+            response = requests.post(
+                self.api_url, headers=headers, json=data, timeout=5
+            )
+            response.raise_for_status()
+        except requests.exceptions.ConnectionError:
+            print("📡 Server offline. Retrying in 60s...")
+        except Exception as e:
+            print(f"❌ Critical Error: {e}")
+
+    def run(self):
+        print("🚀 Starting Agent ...")
+        while True:
+            current_time = time.time()
+            if current_time - self.last_check_time > self.check_interval:
+                system_info = self.get_system_info()
+                self.send_to_api(system_info)
+                self.last_check_time = current_time
+            time.sleep(1)
+
+
+if __name__ == "__main__":
+    agent = AgentEnv()
+    agent.run()

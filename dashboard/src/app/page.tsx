@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-/* ── Types ─────────────────────────────────────── */
 
 interface PortEntry {
   port: number;
@@ -20,7 +19,6 @@ interface AgentData {
   lastUpdate: string;
 }
 
-/* ── Helpers ───────────────────────────────────── */
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -43,7 +41,6 @@ function timeAgo(iso: string): string {
   return `${Math.floor(diff / 3600)}h ago`;
 }
 
-/* ── Stat Card ─────────────────────────────────── */
 
 function StatCard({
   title,
@@ -102,7 +99,6 @@ function StatCard({
   );
 }
 
-/* ── Ports & Services Card ─────────────────────── */
 
 function PortsCard({
   ports,
@@ -126,7 +122,7 @@ function PortsCard({
       className="card animate-fade-in-up col-span-full"
       style={{ animationDelay: `${delay}ms` }}
     >
-      {/* Header — always visible */}
+      
       <button
         onClick={() => setExpanded((v) => !v)}
         className="w-full flex items-center justify-between cursor-pointer"
@@ -151,7 +147,6 @@ function PortsCard({
         </span>
       </button>
 
-      {/* Expandable body */}
       <div
         className="ports-body"
         style={{
@@ -160,7 +155,6 @@ function PortsCard({
           marginTop: expanded ? "1rem" : "0",
         }}
       >
-        {/* Search */}
         <input
           type="text"
           placeholder="Filter by port, service, or process…"
@@ -169,7 +163,6 @@ function PortsCard({
           className="ports-search"
         />
 
-        {/* List */}
         <div className="ports-list">
           {filtered.length === 0 && (
             <p className="text-xs text-zinc-600 text-center py-4">
@@ -193,7 +186,6 @@ function PortsCard({
   );
 }
 
-/* ── Skeleton Cards ────────────────────────────── */
 
 function SkeletonCard({ delay }: { delay: number }) {
   return (
@@ -209,7 +201,6 @@ function SkeletonCard({ delay }: { delay: number }) {
   );
 }
 
-/* ── Page ──────────────────────────────────────── */
 
 export default function Home() {
   const [data, setData] = useState<AgentData | null>(null);
@@ -246,7 +237,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen px-6 py-12 md:px-12 lg:px-20">
-      {/* Header */}
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10 animate-fade-in-up">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -272,7 +262,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Grid */}
       {data ? (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
@@ -337,7 +326,6 @@ export default function Home() {
             delay={300}
           />
 
-          {/* Ports & Services */}
           {data.ports_services && data.ports_services.length > 0 && (
             <PortsCard ports={data.ports_services} delay={360} />
           )}

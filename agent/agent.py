@@ -1,6 +1,7 @@
 import os
 import time
 import psutil
+import socket
 import requests
 from dotenv import load_dotenv
 
@@ -33,6 +34,30 @@ class AgentEnv:
             return {"percent": battery.percent, "is_charging": battery.power_plugged}
         return {"percent": None, "is_charging": None}
 
+    def get_port_service(self):
+        port_data = []
+        connections = psutil.net_connections(kind="inet")
+        for conn in connections:
+            if conn.status == "LISTEN":
+                port = conn.laddr.port
+                try:
+                    service = socket.getservbyport(port, "tcp")
+                except (socket.error, OverflowError):
+                    service = "unknown-service"
+
+                try:
+                    process = psutil.Process(conn.pid)
+                    process_name = process.name()
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    process_name = "system/restricted"
+
+                port_data.append(
+                    {"port": port, "service": service, "process": process_name}
+                )
+
+        unique_ports = {p["port"]: p for p in port_data}.values()
+        return list(unique_ports)
+
     def get_system_info(self):
         return {
             "cpu_usage": self.get_cpu_usage(),
@@ -40,6 +65,7 @@ class AgentEnv:
             "disk_usage": self.get_disk_usage(),
             "network_usage": self.get_network_usage(),
             "battery_info": self.get_battery_info(),
+            "ports_services": self.get_port_service(),
         }
 
     def send_to_api(self, data):

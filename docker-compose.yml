@@ -6,13 +6,13 @@ services:
       POSTGRES_PASSWORD: adash_secret
       POSTGRES_DB: adash
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U adash"]
+      test: [ "CMD-SHELL", "pg_isready -U adash" ]
       interval: 5s
       timeout: 5s
       retries: 5
-
+  
   dashboard:
     build: ./dashboard
     ports:

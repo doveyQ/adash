@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { systemStats, biometrics, workflow } from "@/db/schema";
+import { systemStats, biometrics } from "@/db/schema";
 
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("Authorization");
@@ -15,11 +15,11 @@ export async function POST(req: NextRequest) {
     if (payload.system) {
       const s = payload.system;
       await db.insert(systemStats).values({
-        cpuUsage: s.cpu_usage,
-        memoryUsage: s.memory_usage,
-        diskUsage: s.disk_usage,
-        bytesSent: s.network_usage[0],
-        bytesRecv: s.network_usage[1],
+        cpuUsage: s.cpu_usage ?? null,
+        memoryUsage: s.memory_usage ?? null,
+        diskUsage: s.disk_usage ?? null,
+        bytesSent: s.network_usage[0] ?? null,
+        bytesRecv: s.network_usage[1] ?? null,
         batteryPercent: s.battery_info?.percent ?? null,
         batteryCharging: s.battery_info?.is_charging ?? null,
         portsServices: s.ports_services ?? null,
@@ -29,26 +29,17 @@ export async function POST(req: NextRequest) {
     if (payload.biometrics) {
       const b = payload.biometrics;
       await db.insert(biometrics).values({
-        sleepHours: b.sleep_hours,
-        hrvMs: b.hrv_ms,
-        calories: b.calories,
-        heartRateBpm: b.heart_rate_bpm,
-        activitySummary: b.activity_summary,
-      });
-    }
-
-    if (payload.workflow) {
-      const w = payload.workflow;
-      await db.insert(workflow).values({
-        githubCommits: w.github_commits,
-        githubIssues: w.github_issues,
-        projectStats: w.project_stats,
-        calendarEntries: w.calendar_entries,
+        sleepHours: b.sleep_hours ?? null,
+        sleepHr: b.sleep_hr ?? null,
+        hrvMs: b.hrv_ms ?? null,
+        restingHr: b.resting_hr ?? null,
+        steps: b.steps ?? null,
+        activities: b.activities ?? null,
       });
     }
 
     console.log("✅ Ingest complete");
-    return NextResponse.json({ message: "Data ingested", status: "ok" });
+    return NextResponse.json({ message: "Data ingested", status: 200 });
   } catch (error) {
     console.error("Ingest error:", error);
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });

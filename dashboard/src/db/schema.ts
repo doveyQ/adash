@@ -4,12 +4,9 @@ import {
   real,
   bigint,
   boolean,
-  text,
   jsonb,
   timestamp,
 } from "drizzle-orm/pg-core";
-
-/* ── System Stats ──────────────────────────────── */
 
 export const systemStats = pgTable("system_stats", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -26,21 +23,18 @@ export const systemStats = pgTable("system_stats", {
     .notNull(),
 });
 
-/* ── Biometrics ────────────────────────────────── */
-
 export const biometrics = pgTable("biometrics", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  sleepHours: real("sleep_hours").notNull(),
-  hrvMs: integer("hrv_ms").notNull(),
-  calories: integer("calories").notNull(),
-  heartRateBpm: integer("heart_rate_bpm").notNull(),
-  activitySummary: text("activity_summary").notNull(),
+  sleepHours: real("sleep_hours"),
+  sleepHr: real("avgSleepingHR"),
+  hrvMs: real("hrv_ms"),
+  restingHr: integer("resting_hr"),
+  steps: integer("steps"),
+  activities: jsonb("activities"),
   recordedAt: timestamp("recorded_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 });
-
-/* ── Workflow ──────────────────────────────────── */
 
 export const workflow = pgTable("workflow", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),

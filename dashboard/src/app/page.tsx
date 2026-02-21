@@ -9,13 +9,18 @@ interface PortEntry {
   process: string;
 }
 
-interface AgentData {
+interface SystemStats {
   cpu_usage: number;
   memory_usage: number;
   disk_usage: number;
   network_usage: [number, number];
   battery_info: { percent: number | null; is_charging: boolean | null };
   ports_services?: PortEntry[];
+}
+
+interface AgentData {
+  systemStats: SystemStats | null;
+  biometrics: Record<string, unknown> | null;
   lastUpdate: string;
 }
 
@@ -122,7 +127,7 @@ function PortsCard({
       className="card animate-fade-in-up col-span-full"
       style={{ animationDelay: `${delay}ms` }}
     >
-      
+
       <button
         onClick={() => setExpanded((v) => !v)}
         className="w-full flex items-center justify-between cursor-pointer"
@@ -262,72 +267,72 @@ export default function Home() {
         </div>
       </header>
 
-      {data ? (
+      {data && data.systemStats ? (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
             title="CPU Usage"
             icon="⚡"
-            value={`${data.cpu_usage.toFixed(1)}%`}
-            percent={data.cpu_usage}
+            value={`${data.systemStats.cpu_usage.toFixed(1)}%`}
+            percent={data.systemStats.cpu_usage}
             delay={0}
           />
           <StatCard
             title="Memory"
             icon="🧠"
-            value={`${data.memory_usage.toFixed(1)}%`}
-            percent={data.memory_usage}
+            value={`${data.systemStats.memory_usage.toFixed(1)}%`}
+            percent={data.systemStats.memory_usage}
             delay={60}
           />
           <StatCard
             title="Disk"
             icon="💾"
-            value={`${data.disk_usage.toFixed(1)}%`}
-            percent={data.disk_usage}
+            value={`${data.systemStats.disk_usage.toFixed(1)}%`}
+            percent={data.systemStats.disk_usage}
             delay={120}
           />
           <StatCard
             title="Network Sent"
             icon="📤"
-            value={formatBytes(data.network_usage[0])}
+            value={formatBytes(data.systemStats.network_usage[0])}
             sub="Total bytes transmitted"
             delay={180}
           />
           <StatCard
             title="Network Received"
             icon="📥"
-            value={formatBytes(data.network_usage[1])}
+            value={formatBytes(data.systemStats.network_usage[1])}
             sub="Total bytes received"
             delay={240}
           />
           <StatCard
             title="Battery"
             icon={
-              data.battery_info.is_charging
+              data.systemStats.battery_info.is_charging
                 ? "🔌"
-                : data.battery_info.percent !== null
-                  ? data.battery_info.percent > 20
+                : data.systemStats.battery_info.percent !== null
+                  ? data.systemStats.battery_info.percent > 20
                     ? "🔋"
                     : "🪫"
                   : "🔋"
             }
             value={
-              data.battery_info.percent !== null
-                ? `${data.battery_info.percent}%`
+              data.systemStats.battery_info.percent !== null
+                ? `${data.systemStats.battery_info.percent}%`
                 : "N/A"
             }
             sub={
-              data.battery_info.is_charging
+              data.systemStats.battery_info.is_charging
                 ? "Charging"
-                : data.battery_info.percent !== null
+                : data.systemStats.battery_info.percent !== null
                   ? "On battery"
                   : "No battery detected"
             }
-            percent={data.battery_info.percent ?? undefined}
+            percent={data.systemStats.battery_info.percent ?? undefined}
             delay={300}
           />
 
-          {data.ports_services && data.ports_services.length > 0 && (
-            <PortsCard ports={data.ports_services} delay={360} />
+          {data.systemStats.ports_services && data.systemStats.ports_services.length > 0 && (
+            <PortsCard ports={data.systemStats.ports_services} delay={360} />
           )}
         </div>
       ) : (

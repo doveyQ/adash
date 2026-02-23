@@ -3,7 +3,7 @@ services:
     image: postgres:18-alpine
     environment:
       POSTGRES_USER: adash
-      POSTGRES_PASSWORD: ***REMOVED***
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: adash
     volumes:
       - pgdata:/var/lib/postgresql
@@ -20,8 +20,8 @@ services:
     volumes:
       - ./dashboard/src:/app/src
     environment:
-      DATABASE_URL: postgresql://adash:***REMOVED***@postgres:5432/adash
-      API_KEY: ***REMOVED***
+      DATABASE_URL: postgresql://adash:${POSTGRES_PASSWORD}@postgres:5432/adash
+      API_KEY: ${API_KEY}
     depends_on:
       postgres:
         condition: service_healthy

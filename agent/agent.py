@@ -5,6 +5,7 @@ import logging
 import psutil
 import socket
 import requests
+from datetime import date, timedelta
 from dotenv import load_dotenv
 from intervals_client import IntervalsClient, extract_activity_summary, extract_sleep_data
 
@@ -18,7 +19,7 @@ class AgentEnv:
     def __init__(self):
         self.api_key = os.getenv("API_KEY")
         self.api_url = os.getenv("API_URL")
-        self.last_check_time = 0
+        self.last_check_time = 0.00
         self.check_interval = 60
         self.intervals = IntervalsClient()
 
@@ -75,9 +76,13 @@ class AgentEnv:
             "ports_services": self.get_port_service(),
         }
 
-    def get_biometrics(self):
-        wellness = self.intervals.get_wellness()
-        activities_raw = self.intervals.get_activities(limit=10)
+    def get_biometrics(self, day=None):
+        """Fetch biometrics for a given day (default: today)."""
+        day_str = day or date.today().isoformat()
+        wellness = self.intervals.get_wellness(day=day_str)
+        activities_raw = self.intervals.get_activities(
+            oldest=day_str, newest=day_str, limit=50
+        )
 
         bio = {
             "sleep_hours": None,
@@ -102,6 +107,22 @@ class AgentEnv:
             bio["activities"] = extract_activity_summary(activities_raw)
 
         return bio
+
+    def backfill_history(self, days=14):
+        """Backfill historical biometrics on startup."""
+        print(f"📥 Backfilling {days} days of biometrics history...")
+        today = date.today()
+        success = 0
+        for i in range(days, 0, -1):
+            day = (today - timedelta(days=i)).isoformat()
+            try:
+                bio = self.get_biometrics(day=day)
+                payload = {"biometrics": bio, "date": day}
+                self.send_pulse(payload)
+                success += 1
+            except Exception as e:
+                print(f"  ⚠ Backfill {day}: {e}")
+        print(f"✅ Backfilled {success}/{days} days")
 
     def build_payload(self):
         return {
@@ -131,6 +152,7 @@ class AgentEnv:
 
     def run(self):
         print("🚀​ Starting Agent ...")
+        self.backfill_history()
         while True:
             current_time = time.time()
             if current_time - self.last_check_time > self.check_interval:

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { systemStats, biometrics } from "@/db/schema";
+import { systemStats, biometrics, productivityLogs } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
@@ -68,6 +68,18 @@ export async function POST(req: NextRequest) {
           recordedAt: recordDate,
         });
       }
+    }
+
+    // NEW: Handle productivity data
+    if (payload.productivity) {
+      const p = payload.productivity;
+      await db.insert(productivityLogs).values({
+        activeWindow: p.active_window ?? null,
+        browserTab: p.browser_tab ?? null,
+        ideTimeMinutes: p.ide_time_minutes ?? null,
+        calendarEvent: p.calendar_event ?? null,
+        appDurations: p.app_durations ?? null,
+      });
     }
 
     console.log("✅ Ingest complete");

@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Heart, Monitor } from "lucide-react";
+import { Heart, Monitor, Brain } from "lucide-react";
+import FlowStateHUD from "./components/FlowStateHUD";
 import BiometricsView from "./components/BiometricsView";
 import SystemView from "./components/SystemView";
+import WakeUpPrompt from "./components/WakeUpPrompt";
+import TaskInput from "./components/TaskInput";
 
 /* ─── Types ──────────────────────────────────────── */
 
@@ -84,31 +87,45 @@ export default function Home() {
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10 animate-fade-in-up">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Agent Dashboard
+            FlowState Agent
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Real-time system &amp; health telemetry
+            AI-driven bio-productivity coaching
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span
-            className="inline-block w-2 h-2 rounded-full animate-pulse-soft"
-            style={{ background: isFresh ? "#22c55e" : "#ef4444" }}
-          />
-          {data?.lastUpdate ? (
-            <span>Updated {timeAgo(data.lastUpdate)}</span>
-          ) : error ? (
-            <span className="text-red-400">Connection lost</span>
-          ) : (
-            <span>Waiting for data…</span>
-          )}
+        <div className="flex items-center gap-3">
+          <TaskInput />
+          <WakeUpPrompt />
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span
+              className="inline-block w-2 h-2 rounded-full animate-pulse-soft"
+              style={{ background: isFresh ? "#22c55e" : "#ef4444" }}
+            />
+            {data?.lastUpdate ? (
+              <span>Updated {timeAgo(data.lastUpdate)}</span>
+            ) : error ? (
+              <span className="text-red-400">Connection lost</span>
+            ) : (
+              <span>Waiting for data…</span>
+            )}
+          </div>
         </div>
       </header>
 
       {/* ── Tabs ──────────────────────────────── */}
-      <Tabs defaultValue="biometrics" className="w-full">
-        <TabsList variant="line" className="mb-8 bg-transparent border-b border-white/[0.06] rounded-none w-full justify-start gap-1">
+      <Tabs defaultValue="flowstate" className="w-full">
+        <TabsList
+          variant="line"
+          className="mb-8 bg-transparent border-b border-white/[0.06] rounded-none w-full justify-start gap-1"
+        >
+          <TabsTrigger
+            value="flowstate"
+            className="data-[state=active]:text-violet-400 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-violet-400 px-4 py-2 transition-all"
+          >
+            <Brain className="w-4 h-4" />
+            FlowState
+          </TabsTrigger>
           <TabsTrigger
             value="biometrics"
             className="data-[state=active]:text-rose-400 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-rose-400 px-4 py-2 transition-all"
@@ -124,6 +141,10 @@ export default function Home() {
             System
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="flowstate" className="tab-content-enter">
+          <FlowStateHUD />
+        </TabsContent>
 
         <TabsContent value="biometrics" className="tab-content-enter">
           <BiometricsView

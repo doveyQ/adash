@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Agent Dashboard",
-  description: "Real-time system monitoring dashboard",
+  title: "FlowState Agent",
+  description: "AI-driven bio-productivity coaching OS",
 };
 
 export default function RootLayout({

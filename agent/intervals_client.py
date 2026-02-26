@@ -1,6 +1,6 @@
 import os
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Optional
 import requests
 
@@ -113,3 +113,35 @@ def extract_sleep_data(wellness: dict) -> dict:
         "sleep_hours": round(sleep_secs / 3600, 1) if sleep_secs else None,
         "sleep_hr": wellness.get("avgSleepingHR"),
     }
+
+
+def extract_training_load(wellness: dict) -> dict:
+    """Extract training load metrics for activity-adjusted coaching."""
+    return {
+        "atl": wellness.get("atl"),  # Acute Training Load
+        "ctl": wellness.get("ctl"),  # Chronic Training Load
+        "ramp_rate": wellness.get("rampRate"),
+        "steps": wellness.get("steps"),
+    }
+
+
+def extract_user_info(profile: dict) -> dict:
+    """Extract user info from Intervals.icu athlete profile."""
+    dob = profile.get("dob")
+    age = None
+    if dob:
+        try:
+            birth = datetime.strptime(dob, "%Y-%m-%d")
+            age = (datetime.now() - birth).days // 365
+        except (ValueError, TypeError):
+            pass
+
+    return {
+        "name": profile.get("name") or profile.get("firstname", ""),
+        "age": age,
+        "sport": profile.get("sportSettings", [{}])[0].get("type") if profile.get("sportSettings") else None,
+        "timezone": profile.get("timezone"),
+        "weight_kg": profile.get("weight"),
+        "sex": profile.get("sex"),
+    }
+

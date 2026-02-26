@@ -2,12 +2,17 @@ import os
 import time
 import json
 import logging
+import threading
 import psutil
 import socket
 import requests
 from datetime import date, timedelta
 from dotenv import load_dotenv
 from intervals_client import IntervalsClient, extract_activity_summary, extract_sleep_data
+from ai_coach import AICoach
+from activity_tracker import ActivityTracker
+from github_client import GitHubClient
+from daily_report import DailyReport
 
 load_dotenv()
 
@@ -22,6 +27,12 @@ class AgentEnv:
         self.last_check_time = 0.00
         self.check_interval = 60
         self.intervals = IntervalsClient()
+
+        # FlowState services
+        self.ai_coach = AICoach()
+        self.activity_tracker = ActivityTracker()
+        self.github_client = GitHubClient()
+        self.daily_report = DailyReport()
 
     def get_cpu_usage(self):
         return psutil.cpu_percent(interval=None)
@@ -141,7 +152,7 @@ class AgentEnv:
         }
         try:
             response = requests.post(
-                self.api_url, headers=headers, json=payload, timeout=10
+                f"{self.api_url}/api/ingest", headers=headers, json=payload, timeout=10
             )
             response.raise_for_status()
             print(f"✅ Pulse sent — {len(json.dumps(payload))} bytes")
@@ -150,9 +161,90 @@ class AgentEnv:
         except Exception as e:
             print(f"❌ Error: {e}")
 
+    def _start_background_services(self):
+        """Start AI coach, activity tracker, and GitHub poller in background threads."""
+        # Activity Tracker (every 60s)
+        tracker_thread = threading.Thread(
+            target=self.activity_tracker.run_loop,
+            daemon=True,
+            name="activity-tracker",
+        )
+        tracker_thread.start()
+        print("👁 Activity Tracker thread started")
+
+        # AI Coach (every 5 min)
+        coach_thread = threading.Thread(
+            target=self.ai_coach.run_loop,
+            daemon=True,
+            name="ai-coach",
+        )
+        coach_thread.start()
+        print("🧠 AI Coach thread started")
+
+        # GitHub poller (every 15 min)
+        def github_loop():
+            interval = int(os.getenv("GITHUB_POLL_INTERVAL", "900"))
+            while True:
+                try:
+                    self.github_client.collect_and_post()
+                except Exception as e:
+                    logger.error("GitHub poll error: %s", e)
+                time.sleep(interval)
+
+        github_thread = threading.Thread(
+            target=github_loop,
+            daemon=True,
+            name="github-poller",
+        )
+        github_thread.start()
+        print("🐙 GitHub Poller thread started")
+
+        # Daily report (runs at ~11:55 PM or on first start)
+        def report_loop():
+            import schedule
+            schedule.every().day.at("23:55").do(self._run_daily_report)
+            while True:
+                schedule.run_pending()
+                time.sleep(60)
+
+        report_thread = threading.Thread(
+            target=report_loop,
+            daemon=True,
+            name="daily-report",
+        )
+        report_thread.start()
+        print("📝 Daily Report scheduler started")
+
+    def _run_daily_report(self):
+        """Generate and post daily report."""
+        result = self.daily_report.generate()
+        if result:
+            try:
+                payload = {
+                    "mode": "critical_fatigue",
+                    "daily_postmortem": result,
+                    "nudges": ["Daily report generated. Review your performance summary."],
+                }
+                headers = {
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                }
+                r = requests.post(
+                    f"{self.api_url}/api/ai/analyze",
+                    headers=headers,
+                    json=payload,
+                    timeout=10,
+                )
+                if r.ok:
+                    print("✅ Daily report posted")
+            except Exception as e:
+                print(f"❌ Daily report error: {e}")
+
     def run(self):
-        print("🚀​ Starting Agent ...")
+        print("🚀​ Starting FlowState Agent ...")
         self.backfill_history()
+        self._start_background_services()
+
         while True:
             current_time = time.time()
             if current_time - self.last_check_time > self.check_interval:

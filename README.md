@@ -1,16 +1,15 @@
 # adash
-> **Working on it ...**
+> **Under construction ...**
 
 ## Overview
-Dashboard including necessary informations like:
+AI-focused dashboard including necessary informations like:
 - **System health and infos**
 - **Wearable data**
-- **Active projects**
-- **Calendar**
+- **Productivity Data**
+- ...
 
 ## Current Tech Stack
 - Next.js
-- Tailwind CSS + Shadcn/ui
 - Python local agent
 - PostgreSQL
 - Docker Compose

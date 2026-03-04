@@ -152,7 +152,7 @@ class AgentEnv:
         }
         try:
             response = requests.post(
-                f"{self.api_url}/api/ingest", headers=headers, json=payload, timeout=10
+                f"{self.api_url}", headers=headers, json=payload, timeout=10
             )
             response.raise_for_status()
             print(f"✅ Pulse sent — {len(json.dumps(payload))} bytes")

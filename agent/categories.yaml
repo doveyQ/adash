@@ -1,0 +1,71 @@
+# App categories for activity tracking
+# Add your own apps here — the tracker matches process names (lowercase)
+
+categories:
+  deep_work:
+    - code                # VS Code
+    - vscodium
+    - neovim
+    - nvim
+    - vim
+    - emacs
+    - jetbrains
+    - idea                # IntelliJ
+    - pycharm
+    - webstorm
+    - clion
+    - goland
+    - libreoffice
+    - soffice             # LibreOffice process
+    - obsidian
+    - logseq
+    - notion-app
+    - typora
+    - zettlr
+    - figma-linux
+    - gimp
+    - inkscape
+    - blender
+    - kdenlive
+    - audacity
+    - terminal
+    - alacritty
+    - kitty
+    - wezterm
+    - gnome-terminal
+    - konsole
+    - xfce4-terminal
+
+  communication:
+    - slack
+    - discord
+    - telegram-desktop
+    - signal-desktop
+    - thunderbird
+    - evolution           # GNOME Mail
+    - zoom
+    - teams
+    - skypeforlinux
+    - element-desktop     # Matrix
+
+  browsing:
+    - firefox
+    - chromium
+    - chromium-browser
+    - google-chrome
+    - brave-browser
+    - vivaldi
+    - opera
+    - epiphany            # GNOME Web
+
+  media:
+    - spotify
+    - vlc
+    - mpv
+    - rhythmbox
+    - celluloid
+    - totem               # GNOME Videos
+    - eog                 # GNOME Image Viewer
+    - loupe
+
+# Anything not matched above falls into "other"

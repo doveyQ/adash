@@ -399,6 +399,18 @@ body {
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+.insight-card {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.06), rgba(99, 102, 241, 0.03));
+  border: 1px solid rgba(139, 92, 246, 0.12);
+  border-radius: 16px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.insight-card:hover {
+  border-color: rgba(139, 92, 246, 0.2);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.08), 0 0 60px rgba(99, 102, 241, 0.04);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

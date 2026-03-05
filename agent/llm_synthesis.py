@@ -107,7 +107,7 @@ def post_insight_to_dashboard(insight: dict, api_url: str, api_key: str, day: st
     }
     try:
         resp = requests.post(
-            api_url.replace("/api/ingest", "/api/insights"),
+            f"{api_url}/api/insights",
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",

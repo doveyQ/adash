@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { aiInsights } from "@/db/schema";
 import { desc, isNotNull, sql } from "drizzle-orm";
+import { withCacheHeaders } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +55,7 @@ export async function GET(req: NextRequest) {
       }));
     }
 
-    return NextResponse.json({
+    return withCacheHeaders(NextResponse.json({
       mode: row?.mode ?? null,
       nudges: row?.nudges ?? [],
       flowPrediction: row?.flowPrediction ?? null,
@@ -64,7 +65,7 @@ export async function GET(req: NextRequest) {
       triggerAlerts: row?.triggerAlerts ?? null,
       lastAnalysis: row?.recordedAt?.toISOString() ?? null,
       ...(historyCount > 0 ? { insightHistory } : {}),
-    });
+    }));
   } catch (error) {
     console.error("Insights query error:", error);
     return NextResponse.json({ error: "Database error" }, { status: 500 });

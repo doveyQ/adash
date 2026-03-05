@@ -57,7 +57,7 @@ export default function FlowStateHUD() {
 
   useEffect(() => {
     fetchInsights();
-    const id = setInterval(fetchInsights, 10_000);
+    const id = setInterval(fetchInsights, 30_000);
     return () => clearInterval(id);
   }, [fetchInsights]);
 

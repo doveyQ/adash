@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { productivityLogs, biometrics, coachSnapshots } from "@/db/schema";
 import { desc, sql, isNotNull, and } from "drizzle-orm";
+import { PRODUCTIVE_PREFIXES } from "@/lib/constants";
+import { withCacheHeaders } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -84,7 +86,6 @@ export async function GET() {
     const appDurations = latestWithDurations?.appDurations ?? null;
 
     // ── Sweet Spot Analysis: 7-DAY data grouped by hour ──
-    const PRODUCTIVE_PREFIXES = ["IDE:", "Terminal:", "Code", "vim", "nvim", "emacs", "Figma"];
 
     const hourBuckets: Record<
       number,
@@ -131,7 +132,7 @@ export async function GET() {
       .sort((a, b) => b.productiveRatio - a.productiveRatio)
       .slice(0, 3);
 
-    return NextResponse.json({
+    return withCacheHeaders(NextResponse.json({
       timeline: logs.map((l) => ({
         activeWindow: l.activeWindow,
         browserTab: l.browserTab,
@@ -147,7 +148,7 @@ export async function GET() {
         topWindows,
         dataRange: "7d",
       },
-    });
+    }));
   } catch (error) {
     console.error("Productivity query error:", error);
     return NextResponse.json(

@@ -116,7 +116,7 @@ export default function TaskInput() {
             backgroundColor: "rgba(0, 0, 0, 0.7)",
             backdropFilter: "blur(4px)",
           }}
-          onClick={(e) => {
+          onClick={(e: React.MouseEvent) => {
             if (e.target === e.currentTarget) setOpen(false);
           }}
         >
@@ -125,7 +125,7 @@ export default function TaskInput() {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: -10 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
             style={{
               width: 380,
               maxHeight: "70vh",
@@ -223,8 +223,8 @@ export default function TaskInput() {
                     </button>
                     <span
                       className={`text-xs flex-1 transition-all ${task.completed
-                          ? "text-muted-foreground/40 line-through"
-                          : "text-foreground/80"
+                        ? "text-muted-foreground/40 line-through"
+                        : "text-foreground/80"
                         }`}
                     >
                       {task.title}

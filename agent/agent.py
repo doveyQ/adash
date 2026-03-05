@@ -13,6 +13,7 @@ from ai_coach import AICoach
 from activity_tracker import ActivityTracker
 from github_client import GitHubClient
 from daily_report import DailyReport
+from store import LocalStore
 
 load_dotenv()
 
@@ -28,11 +29,14 @@ class AgentEnv:
         self.check_interval = 60
         self.intervals = IntervalsClient()
 
-        # FlowState services
-        self.ai_coach = AICoach()
-        self.activity_tracker = ActivityTracker()
-        self.github_client = GitHubClient()
-        self.daily_report = DailyReport()
+        # Local state store — shared across all services
+        self.store = LocalStore()
+
+        # FlowState services (pass store for local reads)
+        self.ai_coach = AICoach(store=self.store)
+        self.activity_tracker = ActivityTracker(store=self.store)
+        self.github_client = GitHubClient(store=self.store)
+        self.daily_report = DailyReport(store=self.store)
 
     def get_cpu_usage(self):
         return psutil.cpu_percent(interval=None)
@@ -136,9 +140,16 @@ class AgentEnv:
         print(f"✅ Backfilled {success}/{days} days")
 
     def build_payload(self):
+        sys_data = self.get_system_data()
+        bio_data = self.get_biometrics()
+
+        # Write to local store (for coach/report to read)
+        self.store.set_system(sys_data)
+        self.store.set_biometrics(bio_data)
+
         return {
-            "system": self.get_system_data(),
-            "biometrics": self.get_biometrics(),
+            "system": sys_data,
+            "biometrics": bio_data,
         }
 
     def send_pulse(self, payload):
@@ -152,7 +163,7 @@ class AgentEnv:
         }
         try:
             response = requests.post(
-                f"{self.api_url}", headers=headers, json=payload, timeout=10
+                f"{self.api_url}/api/ingest", headers=headers, json=payload, timeout=10
             )
             response.raise_for_status()
             print(f"✅ Pulse sent — {len(json.dumps(payload))} bytes")

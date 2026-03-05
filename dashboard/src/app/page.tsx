@@ -67,8 +67,8 @@ export default function Home() {
     }
 
     poll();
-    const id = setInterval(poll, 2000);
-    const tickId = setInterval(() => setTick((t) => t + 1), 1000);
+    const id = setInterval(poll, 15_000);
+    const tickId = setInterval(() => setTick((t) => t + 1), 15_000);
 
     return () => {
       active = false;

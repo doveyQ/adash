@@ -8,6 +8,13 @@
       "when": 1771872293021,
       "tag": "0000_colorful_smiling_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1772698129112,
+      "tag": "0001_nifty_jackpot",
+      "breakpoints": true
     }
   ]
 }

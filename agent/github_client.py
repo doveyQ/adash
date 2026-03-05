@@ -9,25 +9,9 @@ import re
 import logging
 import requests
 from datetime import datetime, timedelta, timezone
+from constants import FRUSTRATION_KEYWORDS
 
 logger = logging.getLogger(__name__)
-
-# ── Keyword-based frustration scoring ──
-FRUSTRATION_KEYWORDS = {
-    r"\b(ugh|argh|damn|wtf|hack|stupid|crap)\b": 0.15,
-    r"!{2,}": 0.10,
-    r"\b(broken|breaking|broke)\b": 0.10,
-    r"\b(fix|hotfix|bugfix|patch)\b": 0.06,
-    r"\b(bug|issue|error|crash|fail)\b": 0.06,
-    r"\b(revert|rollback)\b": 0.08,
-    r"\b(temp|temporary|workaround)\b": 0.05,
-    r"\b(again|retry|attempt)\b": 0.04,
-    r"\b(todo|fixme|xxx)\b": 0.04,
-    r"\b(urgent|emergency|critical)\b": 0.08,
-    r"\b(feat|feature|add|implement|create)\b": -0.03,
-    r"\b(refactor|clean|improve|optimize)\b": -0.02,
-    r"\b(docs|readme|changelog|test)\b": -0.02,
-}
 
 
 def score_commit_message(message: str) -> float:
@@ -48,12 +32,13 @@ def score_commits(commits: list[dict]) -> float:
 
 
 class GitHubClient:
-    def __init__(self):
+    def __init__(self, store=None):
         self.token = os.getenv("GITHUB_TOKEN", "")
         self.repos = [r.strip() for r in os.getenv("GITHUB_REPOS", "").split(",") if r.strip()]
         self.username = os.getenv("GITHUB_USERNAME", "")
         self.api_url = os.getenv("API_URL", "http://localhost:3000")
         self.api_key = os.getenv("API_KEY", "")
+        self.store = store
         self.session = requests.Session()
         if self.token:
             self.session.headers.update({
@@ -69,16 +54,44 @@ class GitHubClient:
             "Content-Type": "application/json",
         }
 
+    def _discover_repos(self) -> list[str]:
+        """Fetch all repositories the user has access to."""
+        if not self.token:
+            return []
+        
+        discovered = []
+        try:
+            # Fetch both public and private repos where the user is an owner or collaborator
+            url = "https://api.github.com/user/repos"
+            params = {"per_page": 100, "affiliation": "owner,collaborator", "sort": "updated"}
+            r = self.session.get(url, params=params, timeout=15)
+            r.raise_for_status()
+            
+            for repo in r.json():
+                discovered.append(repo["full_name"])
+            
+            logger.info("🔭 Discovered %d repositories", len(discovered))
+        except Exception as e:
+            logger.error("Failed to discover repositories: %s", e)
+            
+        return discovered
+
     def fetch_recent_commits(self, hours: int = 24) -> list[dict]:
         """Fetch commits from the last N hours, deduplicated by SHA."""
-        if not self.token or not self.repos:
-            logger.info("GitHub not configured (no token or repos), skipping")
+        if not self.token:
+            logger.info("GitHub not configured (no token), skipping")
+            return []
+
+        # Use explicitly configured repos or discover all
+        target_repos = self.repos if self.repos else self._discover_repos()
+        if not target_repos:
+            logger.info("No repositories found to poll")
             return []
 
         since = (datetime.now(timezone.utc) - timedelta(hours=hours)).isoformat()
         new_commits = []
 
-        for repo in self.repos:
+        for repo in target_repos:
             try:
                 url = f"https://api.github.com/repos/{repo}/commits"
                 r = self.session.get(url, params={"since": since, "per_page": 30}, timeout=15)
@@ -103,12 +116,17 @@ class GitHubClient:
         return new_commits
 
     def fetch_issues(self) -> list[dict]:
-        """Fetch open issues assigned to the user across configured repos."""
-        if not self.token or not self.repos:
+        """Fetch open issues assigned to the user across repositories."""
+        if not self.token:
+            return []
+
+        # Use explicitly configured repos or discover all
+        target_repos = self.repos if self.repos else self._discover_repos()
+        if not target_repos:
             return []
 
         all_issues = []
-        for repo in self.repos:
+        for repo in target_repos:
             try:
                 url = f"https://api.github.com/repos/{repo}/issues"
                 params = {
@@ -199,6 +217,10 @@ class GitHubClient:
             "sentiment_detail": per_commit if per_commit else None,
             "issues": issues if issues else None,
         }
+
+        # Write to local store
+        if self.store:
+            self.store.set_github({"entries": [payload]})
 
         try:
             r = requests.post(

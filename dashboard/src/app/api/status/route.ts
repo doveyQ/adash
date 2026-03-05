@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { systemStats, biometrics } from "@/db/schema";
 import { desc } from "drizzle-orm";
+import { withCacheHeaders } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export async function GET() {
       .orderBy(desc(biometrics.recordedAt))
       .limit(1);
 
-    return NextResponse.json({
+    return withCacheHeaders(NextResponse.json({
       systemStats: latestSystem
         ? {
           cpu_usage: latestSystem.cpuUsage,
@@ -48,7 +49,7 @@ export async function GET() {
         }
         : null,
       lastUpdate: latestSystem.recordedAt.toISOString(),
-    });
+    }));
   } catch (error) {
     console.error("Status query error:", error);
     return NextResponse.json({ error: "Database error" }, { status: 500 });

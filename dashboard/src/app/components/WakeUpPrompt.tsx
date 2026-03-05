@@ -95,7 +95,7 @@ export default function WakeUpPrompt() {
             backgroundColor: "rgba(0, 0, 0, 0.85)",
             backdropFilter: "blur(4px)",
           }}
-          onClick={(e) => {
+          onClick={(e: React.MouseEvent) => {
             if (e.target === e.currentTarget && wakeUpTime) setShowModal(false);
           }}
         >
@@ -104,7 +104,7 @@ export default function WakeUpPrompt() {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
             style={{
               width: 340,
               borderRadius: 16,

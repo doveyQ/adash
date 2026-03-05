@@ -36,9 +36,10 @@ Today's data:
 
 
 class DailyReport:
-    def __init__(self):
+    def __init__(self, store=None):
         self.api_url = os.getenv("API_URL", "http://localhost:3000")
         self.api_key = os.getenv("API_KEY", "")
+        self.store = store  # LocalStore instance
 
     def _headers(self):
         return {
@@ -47,7 +48,11 @@ class DailyReport:
         }
 
     def _fetch_day_data(self) -> dict:
-        """Fetch full day data from dashboard APIs."""
+        """Get day data from local store or HTTP fallback."""
+        if self.store:
+            return self.store.get_all_state()
+
+        # Legacy HTTP fallback
         data = {}
         try:
             for endpoint in ["status", "productivity", "github"]:

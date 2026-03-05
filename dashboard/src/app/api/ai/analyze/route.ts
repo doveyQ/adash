@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { aiInsights } from "@/db/schema";
+import { requireApiKey } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get("Authorization");
-  if (authHeader !== `Bearer ${process.env.API_KEY}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = requireApiKey(req);
+  if (authError) return authError;
 
   try {
     const payload = await req.json();

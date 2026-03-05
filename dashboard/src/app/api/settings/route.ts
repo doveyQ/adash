@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { userSettings } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
+import { requireApiKey } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -20,14 +21,11 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
+  // Allow unauthenticated requests from the webapp (no Authorization header)
   const authHeader = req.headers.get("Authorization");
-  // Allow both API key auth and unauthenticated (from webapp)
-  if (
-    authHeader &&
-    authHeader !== `Bearer ${process.env.API_KEY}` &&
-    authHeader !== "Bearer undefined"
-  ) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (authHeader && authHeader !== "Bearer undefined") {
+    const authError = requireApiKey(req);
+    if (authError) return authError;
   }
 
   try {

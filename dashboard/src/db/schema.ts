@@ -38,12 +38,27 @@ export const biometrics = pgTable("biometrics", {
     .notNull(),
 });
 
-export const workflow = pgTable("workflow", {
+export const insights = pgTable("insights", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
-  githubCommits: jsonb("github_commits"),
-  githubIssues: jsonb("github_issues"),
-  projectStats: jsonb("project_stats"),
-  calendarEntries: jsonb("calendar_entries"),
+  narrative: text("narrative").notNull(),
+  correlations: jsonb("correlations"),
+  recommendations: jsonb("recommendations"),
+  date: timestamp("date", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const activitySnapshots = pgTable("activity_snapshots", {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  focusMinutes: real("focus_minutes"),
+  communicationMinutes: real("communication_minutes"),
+  browsingMinutes: real("browsing_minutes"),
+  idleMinutes: real("idle_minutes"),
+  otherMinutes: real("other_minutes"),
+  topApp: text("top_app"),
+  categoryBreakdown: jsonb("category_breakdown"),
+  sessionCount: integer("session_count"),
   recordedAt: timestamp("recorded_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

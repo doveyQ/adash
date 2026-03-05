@@ -13,40 +13,9 @@ import logging
 import subprocess
 import requests
 from collections import defaultdict
+from constants import IDE_PATTERNS, BROWSER_PATTERNS
 
 logger = logging.getLogger(__name__)
-
-# Known IDE window patterns
-IDE_PATTERNS = [
-    r"Visual Studio Code",
-    r"VSCodium",
-    r"Code - OSS",
-    r"IntelliJ IDEA",
-    r"PyCharm",
-    r"WebStorm",
-    r"CLion",
-    r"Cursor",
-    r"Antigravity",
-    r"GoLand",
-    r"Neovim",
-    r"Vim",
-    r"Emacs",
-    r"Sublime Text",
-    r"Atom",
-    r"Android Studio",
-    r"Zed",
-]
-
-BROWSER_PATTERNS = [
-    r"Firefox",
-    r"Chromium",
-    r"Google Chrome",
-    r"Brave",
-    r"Microsoft Edge",
-    r"Opera",
-    r"Vivaldi",
-    r"Safari",
-]
 
 IDE_REGEX = re.compile("|".join(IDE_PATTERNS), re.IGNORECASE)
 BROWSER_REGEX = re.compile("|".join(BROWSER_PATTERNS), re.IGNORECASE)
@@ -96,10 +65,11 @@ def get_active_window_title() -> str | None:
 
 
 class ActivityTracker:
-    def __init__(self):
+    def __init__(self, store=None):
         self.api_url = os.getenv("API_URL", "http://localhost:3000")
         self.api_key = os.getenv("API_KEY", "")
         self.track_interval = int(os.getenv("ACTIVITY_TRACK_INTERVAL", "60"))
+        self.store = store
         self.ide_session_start = None
         self.last_window = None
         # Cumulative app time tracking (resets daily)
@@ -194,6 +164,10 @@ class ActivityTracker:
 
         data = self._classify_window(title)
         payload = {"productivity": data}
+
+        # Write to local store
+        if self.store:
+            self.store.set_productivity(data, data.get("app_durations"))
 
         try:
             r = requests.post(
